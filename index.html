@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>糸通しミニゲーム - ZEN力バージョン</title>
+    <title>糸通し - ZEN力バージョン</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
@@ -37,7 +37,7 @@
                 const centerX = this.game.config.width / 2;
                 const centerY = this.game.config.height / 2;
                 
-                this.add.text(centerX, this.game.config.height * 0.15, '操作モードを選択', {
+                this.add.text(centerX, 120, '操作モードを選択', {
                     fontSize: '40px',
                     color: '#f1f5f9',
                     fontStyle: 'bold',
@@ -126,12 +126,12 @@
                 createButton(centerY - 80, 'スマホモード', '（タップ操作）', drawPhoneIcon, '#3b82f6', '#2563eb', 'touch');
                 createButton(centerY + 80, 'PCモード', '（スペースキー操作）', drawKeyboardIcon, '#16a34a', '#15803d', 'keyboard');
 
-                // 音量注意のテキストを追加
-                this.add.text(centerX, this.game.config.height - 40, '音量注意！！', {
-                    fontSize: '24px',
-                    color: '#f87171', // red-400
+                // 音あり推奨のテキストを画面下部に移動
+                this.add.text(centerX, this.game.config.height - 50, '音あり推奨！！', {
+                    fontSize: '22px',
+                    color: '#93c5fd', // blue-300
                     fontStyle: 'bold',
-                    stroke: '#000000',
+                    stroke: '#0f172a',
                     strokeThickness: 4
                 }).setOrigin(0.5);
             }
@@ -260,8 +260,8 @@
                 this.powerups = null;
                 this.danmakuGroup = null; 
                 this.danmakuWords = [
-                    '助けて', '待ってる', 'どこ？', '白いわ', '聞こえる', '音ね…', '懐かしい', '夢ね', 'うるさい',
-                    'まだ見えない', '歌が聞こえる', 'いつまで？', '愛おしいわ', 'ぜんまいを探して', '懐かしい音'
+                    '助けて', '待ってる', '迎えはいつ？', 'どこにいるの？', 'ここは白いわ', '聞こえた', '綺麗な音でしょ', '懐かしいわ', '全て夢ね', 'うるさい', '怖い？',
+                    'まだ見えない', '歌が聞こえる', 'いつまで？', '愛おしいわ', 'ぜんまいを探して', '懐かしい音ね', '見つけて？', '鎖の音だ'
                 ];
 
                 this.score = 0;
