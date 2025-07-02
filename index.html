@@ -33,48 +33,107 @@
             }
 
             create() {
-                this.cameras.main.setBackgroundColor('#f1f5f9');
+                this.cameras.main.setBackgroundColor('#1e293b'); // よりダークな背景色
                 const centerX = this.game.config.width / 2;
+                const centerY = this.game.config.height / 2;
                 
-                this.add.text(centerX, this.game.config.height * 0.2, '操作モードを選択', {
-                    fontSize: '36px',
-                    color: '#1e293b',
-                    fontStyle: 'bold'
+                this.add.text(centerX, this.game.config.height * 0.15, '操作モードを選択', {
+                    fontSize: '40px',
+                    color: '#f1f5f9',
+                    fontStyle: 'bold',
+                    stroke: '#0f172a',
+                    strokeThickness: 6
                 }).setOrigin(0.5);
 
-                // スマホモードボタン
-                const spButton = this.add.text(centerX, this.game.config.height * 0.45, 'スマホモード\n（タップ操作）', {
-                    fontSize: '28px',
-                    color: '#ffffff',
-                    backgroundColor: '#3b82f6',
-                    align: 'center',
-                    padding: { x: 40, y: 20 },
+                // --- ボタン作成関数 ---
+                const createButton = (y, text, subText, iconDrawer, color, hoverColor, mode) => {
+                    const buttonWidth = 320;
+                    const buttonHeight = 120;
+                    
+                    const container = this.add.container(centerX, y);
+                    
+                    // 背景
+                    const bg = this.add.graphics();
+                    bg.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.9);
+                    bg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 20);
+                    bg.lineStyle(4, 0xffffff, 0.5);
+                    bg.strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 20);
+                    container.add(bg);
+
+                    // アイコン
+                    const icon = iconDrawer();
+                    icon.x = -buttonWidth / 2 + 60;
+                    icon.y = 0;
+                    container.add(icon);
+
+                    // テキスト
+                    const textBlockCenterX = 55; // テキストブロックのX座標を調整
+                    const mainText = this.add.text(textBlockCenterX, -15, text, { fontSize: '32px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5, 0.5);
+                    const subTextObj = this.add.text(textBlockCenterX, 25, subText, { fontSize: '18px', color: '#e2e8f0' }).setOrigin(0.5, 0.5);
+                    container.add([mainText, subTextObj]);
+
+                    // インタラクション
+                    container.setSize(buttonWidth, buttonHeight).setInteractive({ useHandCursor: true });
+
+                    container.on('pointerover', () => {
+                        this.tweens.add({ targets: container, scale: 1.05, duration: 200, ease: 'Power1' });
+                        bg.clear().fillStyle(Phaser.Display.Color.HexStringToColor(hoverColor).color, 1).fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 20);
+                        bg.lineStyle(4, 0xffffff, 1).strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 20);
+                    });
+
+                    container.on('pointerout', () => {
+                        this.tweens.add({ targets: container, scale: 1, duration: 200, ease: 'Power1' });
+                        bg.clear().fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.9).fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 20);
+                        bg.lineStyle(4, 0xffffff, 0.5).strokeRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 20);
+                    });
+                    
+                    container.on('pointerdown', () => {
+                        this.tweens.add({
+                            targets: container, scale: 0.95, duration: 100, yoyo: true,
+                            onComplete: () => this.selectMode(mode)
+                        });
+                    });
+
+                    return container;
+                };
+
+                // --- アイコン描画関数 ---
+                const drawPhoneIcon = () => {
+                    const icon = this.add.graphics();
+                    icon.fillStyle(0xffffff, 1);
+                    icon.fillRoundedRect(-25, -40, 50, 80, 10);
+                    icon.fillStyle(0x333333, 1);
+                    icon.fillRoundedRect(-20, -35, 40, 60, 5);
+                    icon.fillStyle(0xffffff, 1);
+                    icon.fillCircle(0, 32, 4);
+                    return icon;
+                };
+
+                const drawKeyboardIcon = () => {
+                    const icon = this.add.graphics();
+                    icon.fillStyle(0xffffff, 1);
+                    icon.fillRoundedRect(-45, -25, 90, 50, 8);
+                    icon.fillStyle(0x333333, 1);
+                    for (let i = 0; i < 3; i++) {
+                        for (let j = 0; j < 7; j++) {
+                             icon.fillRect(-40 + j * 12, -18 + i * 12, 8, 8);
+                        }
+                    }
+                    return icon;
+                };
+
+                // ボタンの作成
+                createButton(centerY - 80, 'スマホモード', '（タップ操作）', drawPhoneIcon, '#3b82f6', '#2563eb', 'touch');
+                createButton(centerY + 80, 'PCモード', '（スペースキー操作）', drawKeyboardIcon, '#16a34a', '#15803d', 'keyboard');
+
+                // 音量注意のテキストを追加
+                this.add.text(centerX, this.game.config.height - 40, '音量注意！！', {
+                    fontSize: '24px',
+                    color: '#f87171', // red-400
                     fontStyle: 'bold',
-                    borderRadius: 10
-                }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-
-                spButton.on('pointerdown', () => {
-                    this.selectMode('touch');
-                });
-                 spButton.on('pointerover', () => spButton.setBackgroundColor('#2563eb'));
-                 spButton.on('pointerout', () => spButton.setBackgroundColor('#3b82f6'));
-
-                // PCモードボタン
-                const pcButton = this.add.text(centerX, this.game.config.height * 0.7, 'PCモード\n（スペースキー操作）', {
-                    fontSize: '28px',
-                    color: '#ffffff',
-                    backgroundColor: '#16a34a',
-                    align: 'center',
-                    padding: { x: 40, y: 20 },
-                    fontStyle: 'bold',
-                    borderRadius: 10
-                }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-
-                pcButton.on('pointerdown', () => {
-                    this.selectMode('keyboard');
-                });
-                pcButton.on('pointerover', () => pcButton.setBackgroundColor('#15803d'));
-                pcButton.on('pointerout', () => pcButton.setBackgroundColor('#16a34a'));
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setOrigin(0.5);
             }
 
             selectMode(mode) {
@@ -97,8 +156,6 @@
             }
 
             preload() {
-                //【重要】このURLをあなたがお持ちのMP4動画ファイルのパスに置き換えてください。
-                // 例: 'assets/my-video.mp4'
                 this.load.video('introVid', 'assets/intro-video.mp4', 'loadeddata', false, true);
             }
 
@@ -201,8 +258,11 @@
 
                 this.needles = null;
                 this.powerups = null;
-                this.danmakuGroup = null; // 弾幕グループを追加
-                this.danmakuWords = ['助けて', '待ってる', 'どこ？', '白いわ', '聞こえる', '音ね…', '懐かしい', '夢ね', 'うるさい']; // 弾幕のワード
+                this.danmakuGroup = null; 
+                this.danmakuWords = [
+                    '助けて', '待ってる', 'どこ？', '白いわ', '聞こえる', '音ね…', '懐かしい', '夢ね', 'うるさい',
+                    'まだ見えない', '歌が聞こえる', 'いつまで？', '愛おしいわ', 'ぜんまいを探して', '懐かしい音'
+                ];
 
                 this.score = 0;
                 this.scoreText = null;
@@ -264,7 +324,7 @@
                 this.needles = this.physics.add.group();
                 this.scoreZones = this.physics.add.group();
                 this.powerups = this.physics.add.group();
-                this.danmakuGroup = this.physics.add.group(); // 弾幕グループを初期化
+                this.danmakuGroup = this.physics.add.group();
 
                 this.scoreText = this.add.text(this.game.config.width / 2, 50, 'Score: 0', { fontSize: '32px', fill: '#1e293b', fontStyle: 'bold' }).setOrigin(0.5).setDepth(10);
                 this.highScoreText = this.add.text(this.game.config.width / 2, 90, `High Score: ${this.highScore}`, { fontSize: '20px', fill: '#475569' }).setOrigin(0.5).setDepth(10);
@@ -272,7 +332,7 @@
                 this.createTitle();
 
                 this.physics.add.collider(this.player, this.needles, () => this.handleDamage(), null, this);
-                this.physics.add.collider(this.player, this.danmakuGroup, () => this.handleDamage(), null, this); // 弾幕との衝突判定
+                this.physics.add.collider(this.player, this.danmakuGroup, () => this.handleDamage(), null, this);
                 this.physics.add.overlap(this.player, this.scoreZones, this.increaseScore, null, this);
                 this.physics.add.overlap(this.player, this.powerups, this.handlePowerupCollision, null, this);
                 
@@ -326,8 +386,8 @@
                 if (this.titleContainer) this.titleContainer.destroy();
 
                 this.needleTimer = this.time.addEvent({ delay: this.spawnRate, callback: this.spawnNeedlePair, callbackScope: this, loop: true });
-                this.powerupTimer = this.time.addEvent({ delay: 2800, callback: this.spawnPowerup, callbackScope: this, loop: true }); // 出現間隔を短縮
-                this.danmakuTimer = this.time.addEvent({ delay: 2100, callback: this.spawnDanmaku, callbackScope: this, loop: true }); // 弾幕タイマーを開始
+                this.powerupTimer = this.time.addEvent({ delay: 2800, callback: this.spawnPowerup, callbackScope: this, loop: true });
+                this.danmakuTimer = this.time.addEvent({ delay: 2100, callback: this.spawnDanmaku, callbackScope: this, loop: true });
                 
                 this.jump();
             }
@@ -374,7 +434,7 @@
 
                 const danmakuText = this.add.text(this.game.config.width, y, word, {
                     fontSize: '24px',
-                    color: '#ef4444', // 赤色
+                    color: '#ef4444',
                     fontStyle: 'bold',
                     stroke: '#ffffff',
                     strokeThickness: 3
@@ -454,7 +514,7 @@
                 this.physics.pause();
                 if(this.needleTimer) this.needleTimer.remove();
                 if(this.powerupTimer) this.powerupTimer.remove();
-                if(this.danmakuTimer) this.danmakuTimer.remove(); // 弾幕タイマーを停止
+                if(this.danmakuTimer) this.danmakuTimer.remove();
                 
                 this.player.setVisible(false);
 
@@ -488,7 +548,7 @@
                 Phaser.Actions.Call(this.needles.getChildren(), child => { if (child.x < -child.width) child.destroy(); });
                 Phaser.Actions.Call(this.scoreZones.getChildren(), child => { if (child.x < -child.width) child.destroy(); });
                 Phaser.Actions.Call(this.powerups.getChildren(), child => { if (child.x < -child.width) child.destroy(); });
-                Phaser.Actions.Call(this.danmakuGroup.getChildren(), child => { if (child.x < -child.width) child.destroy(); }); // 弾幕のクリーンアップ
+                Phaser.Actions.Call(this.danmakuGroup.getChildren(), child => { if (child.x < -child.width) child.destroy(); });
             }
         }
 
