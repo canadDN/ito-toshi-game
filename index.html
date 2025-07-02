@@ -166,7 +166,7 @@
             }
 
             preload() {
-                this.load.video('introVid', 'assets/intro-video.mp4', 'loadeddata', false, false);
+                this.load.video('introVid', 'assets/intro-video.mp4', 'loadeddata', false, true);
             }
 
             create() {
@@ -194,34 +194,26 @@
                 const scale = Math.max(this.game.config.width / vid.width, this.game.config.height / vid.height);
                 vid.setScale(scale).setScrollFactor(0);
 
-                vid.setMute(false);
                 vid.play();
 
                 vid.on('complete', () => {
-                    this.startTransition(vid);
+                    this.startTransition();
                 });
 
                 this.input.once('pointerdown', () => {
-                    this.startTransition(vid);
+                    if (vid.isPlaying()) {
+                        vid.stop();
+                    }
+                    this.startTransition();
                 });
             }
             
-            startTransition(vid) {
+            startTransition() {
                 if (this.transitionStarted) return;
                 this.transitionStarted = true;
 
-                // 音声のフェードアウト
-                this.tweens.add({
-                    targets: vid,
-                    volume: 0,
-                    duration: 1000,
-                    ease: 'Linear'
-                });
-
-                // 映像のフェードアウト
                 this.cameras.main.fadeOut(1000, 0, 0, 0);
                 this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-                    vid.stop();
                     this.showTextSequence();
                 });
             }
@@ -278,7 +270,7 @@
                 this.powerups = null;
                 this.danmakuGroup = null; 
                 this.danmakuWords = [
-                    '助けて', 'あなたを待ってる', '迎えはいつ？', 'どこにいるの？', 'ここは白くて怖い', '聞こえる？', '綺麗な音でしょ', '懐かしいわ', 'きっと全て夢ね', 'うるさい', '白は怖い？',
+                    '助けて', 'あなたを待ってる', '迎えはいつ？', 'どこにいるの？', 'ここは白くて怖い', '聞こえる？', '綺麗な音でしょ', '懐かしいわ', 'きっと全て夢ね', 'うるさい', '白い部屋は怖い？',
                     'まだ見えない', '歌が聞こえる', '愛おしいわ', 'ぜんまいを探して', '懐かしい音ね', '私を見つけて', '鎖で繋ぎましょ', '真っ赤に咲いたね'
                 ];
 
