@@ -126,14 +126,24 @@
                 createButton(centerY - 80, 'スマホモード', '（タップ操作）', drawPhoneIcon, '#3b82f6', '#2563eb', 'touch');
                 createButton(centerY + 80, 'PCモード', '（スペースキー操作）', drawKeyboardIcon, '#16a34a', '#15803d', 'keyboard');
 
-                // 音あり推奨のテキストを画面下部に移動
-                this.add.text(centerX, this.game.config.height - 50, '音あり推奨！！', {
-                    fontSize: '22px',
-                    color: '#93c5fd', // blue-300
+                // 音あり推奨のテキストを画面下部に移動し、目立たせる
+                const soundText = this.add.text(centerX, this.game.config.height - 50, '音あり推奨！！', {
+                    fontSize: '24px',
+                    color: '#facc15', // 目立つ黄色に変更
                     fontStyle: 'bold',
                     stroke: '#0f172a',
-                    strokeThickness: 4
+                    strokeThickness: 5
                 }).setOrigin(0.5);
+
+                // 注意を引くためのアニメーションを追加
+                this.tweens.add({
+                    targets: soundText,
+                    scale: 1.05,
+                    duration: 800,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
             }
 
             selectMode(mode) {
