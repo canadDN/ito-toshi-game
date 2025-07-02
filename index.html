@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>糸通しミニゲーム - ZEN力バージョン</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* スクロールバーを非表示に */
+        }
+      .game-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="bg-black">
+    <div id="game-container"></div>
+
+    <script>
+        class ModeSelectScene extends Phaser.Scene {
+            constructor() {
+                super('ModeSelectScene');
+            }
+
+            create() {
+                this.cameras.main.setBackgroundColor('#f1f5f9');
+                const centerX = this.game.config.width / 2;
+                
+                this.add.text(centerX, this.game.config.height * 0.2, '操作モードを選択', {
+                    fontSize: '36px',
+                    color: '#1e293b',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // スマホモードボタン
+                const spButton = this.add.text(centerX, this.game.config.height * 0.45, 'スマホモード\n（タップ操作）', {
+                    fontSize: '28px',
+                    color: '#ffffff',
+                    backgroundColor: '#3b82f6',
+                    align: 'center',
+                    padding: { x: 40, y: 20 },
+                    fontStyle: 'bold',
+                    borderRadius: 10
+                }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+                spButton.on('pointerdown', () => {
+                    this.selectMode('touch');
+                });
+                 spButton.on('pointerover', () => spButton.setBackgroundColor('#2563eb'));
+                 spButton.on('pointerout', () => spButton.setBackgroundColor('#3b82f6'));
+
+                // PCモードボタン
+                const pcButton = this.add.text(centerX, this.game.config.height * 0.7, 'PCモード\n（スペースキー操作）', {
+                    fontSize: '28px',
+                    color: '#ffffff',
+                    backgroundColor: '#16a34a',
+                    align: 'center',
+                    padding: { x: 40, y: 20 },
+                    fontStyle: 'bold',
+                    borderRadius: 10
+                }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+                pcButton.on('pointerdown', () => {
+                    this.selectMode('keyboard');
+                });
+                pcButton.on('pointerover', () => pcButton.setBackgroundColor('#15803d'));
+                pcButton.on('pointerout', () => pcButton.setBackgroundColor('#16a34a'));
+            }
+
+            selectMode(mode) {
+                this.cameras.main.fadeOut(500, 0, 0, 0);
+                this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                    this.scene.start('IntroScene', { controlMode: mode });
+                });
+            }
+        }
+        
+        class IntroScene extends Phaser.Scene {
+            constructor() {
+                super('IntroScene');
+                this.transitionStarted = false;
+                this.controlMode = 'touch';
+            }
+
+            init(data) {
+                this.controlMode = data.controlMode || 'touch';
+            }
+
+            preload() {
+                //【重要】このURLをあなたがお持ちのMP4動画ファイルのパスに置き換えてください。
+                // 例: 'assets/my-video.mp4'
+                this.load.video('introVid', 'assets/intro-video.mp4', 'loadeddata', false, true);
+            }
+
+            create() {
+                this.cameras.main.setBackgroundColor('#000000');
+                const centerX = this.game.config.width / 2;
+                const centerY = this.game.config.height / 2;
+
+                const startPrompt = this.add.text(centerX, centerY, 'クリックして開始', {
+                    fontSize: '32px',
+                    color: '#ffffff',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                this.input.once('pointerdown', () => {
+                    startPrompt.destroy();
+                    this.playIntroVideo();
+                });
+            }
+
+            playIntroVideo() {
+                const centerX = this.game.config.width / 2;
+                const centerY = this.game.config.height / 2;
+
+                const vid = this.add.video(centerX, centerY, 'introVid');
+                const scale = Math.max(this.game.config.width / vid.width, this.game.config.height / vid.height);
+                vid.setScale(scale).setScrollFactor(0);
+
+                vid.play();
+
+                vid.on('complete', () => {
+                    this.startTransition();
+                });
+
+                this.input.once('pointerdown', () => {
+                    if (vid.isPlaying()) {
+                        vid.stop();
+                    }
+                    this.startTransition();
+                });
+            }
+            
+            startTransition() {
+                if (this.transitionStarted) return;
+                this.transitionStarted = true;
+
+                this.cameras.main.fadeOut(1000, 0, 0, 0);
+                this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                    this.showTextSequence();
+                });
+            }
+
+            showTextSequence() {
+                this.children.list.forEach(child => child.setVisible(false));
+                
+                const centerX = this.game.config.width / 2;
+                const centerY = this.game.config.height / 2;
+
+                this.add.text(centerX, centerY, '全力で――助ける', {
+                    fontFamily: 'serif',
+                    fontSize: '48px',
+                    color: '#ffffff',
+                    align: 'center',
+                    stroke: '#ffffff',
+                    strokeThickness: 1
+                }).setOrigin(0.5);
+
+                this.cameras.main.fadeIn(1000, 0, 0, 0);
+                this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_IN_COMPLETE, () => {
+                    this.time.delayedCall(2000, () => {
+                        this.startFinalFade();
+                    });
+                });
+            }
+            
+            startFinalFade() {
+                this.cameras.main.fadeOut(1000, 0, 0, 0);
+                this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                    this.scene.start('GameScene', { controlMode: this.controlMode });
+                });
+            }
+        }
+
+
+        class GameScene extends Phaser.Scene {
+            constructor() {
+                super('GameScene');
+                this.controlMode = 'touch';
+                this.spaceKey = null;
+            }
+            
+            init(data) {
+                this.controlMode = data.controlMode || 'touch';
+
+                this.player = null;
+                this.playerChars = ['Z', 'E', 'N', '力'];
+                this.playerCharObjects = [];
+                this.health = 4;
+                this.isInvincible = false;
+
+                this.needles = null;
+                this.powerups = null;
+                this.danmakuGroup = null; // 弾幕グループを追加
+                this.danmakuWords = ['助けて', '待ってる', 'どこ？', '白いわ', '聞こえる', '音ね…', '懐かしい', '夢ね', 'うるさい']; // 弾幕のワード
+
+                this.score = 0;
+                this.scoreText = null;
+                this.highScore = 0;
+                this.highScoreText = null;
+                this.isGameStarted = false;
+                this.isGameOver = false;
+                this.titleContainer = null;
+                this.gameOverText = null;
+
+                this.initialNeedleGap = 220; 
+                this.minNeedleGap = 80;
+                this.needleGap = this.initialNeedleGap;
+                
+                this.needleSpeed = -200;
+                this.spawnRate = 1500;
+                this.jumpVelocity = -350;
+            }
+
+            preload() {
+                const graphics = this.make.graphics();
+                graphics.fillStyle(0x4a5568, 1);
+                graphics.fillRect(0, 0, 80, 500);
+                graphics.generateTexture('needle', 80, 500);
+                graphics.destroy();
+                
+                this.load.audio('bgm', 'assets/sounds/bgm.mp3');
+            }
+
+            create() {
+                if (!this.sound.get('bgm') || !this.sound.get('bgm').isPlaying) {
+                    this.sound.play('bgm', {
+                        loop: true,
+                        volume: 0.4
+                    });
+                }
+
+                this.cameras.main.setBackgroundColor('#f1f5f9');
+                this.highScore = localStorage.getItem('itoToshiHighScore_zen') || 0;
+
+                this.physics.world.setBounds(0, 0, this.game.config.width, this.game.config.height);
+                this.physics.world.gravity.y = 800;
+
+                this.player = this.add.container(this.game.config.width * 0.2, this.game.config.height / 2);
+                this.physics.world.enable(this.player);
+                
+                this.playerCharObjects = [];
+                let xOffsetPlayer = 0;
+                this.playerChars.forEach(char => {
+                    const text = this.add.text(xOffsetPlayer, 0, char, { fontSize: '40px', fill: '#1e293b', fontStyle: 'bold' }).setOrigin(0, 0.5);
+                    this.player.add(text);
+                    this.playerCharObjects.push(text);
+                    xOffsetPlayer += text.width + 5;
+                });
+                this.updatePlayerVisuals();
+
+                this.player.body.setCollideWorldBounds(true).setAllowGravity(false);
+
+                this.needles = this.physics.add.group();
+                this.scoreZones = this.physics.add.group();
+                this.powerups = this.physics.add.group();
+                this.danmakuGroup = this.physics.add.group(); // 弾幕グループを初期化
+
+                this.scoreText = this.add.text(this.game.config.width / 2, 50, 'Score: 0', { fontSize: '32px', fill: '#1e293b', fontStyle: 'bold' }).setOrigin(0.5).setDepth(10);
+                this.highScoreText = this.add.text(this.game.config.width / 2, 90, `High Score: ${this.highScore}`, { fontSize: '20px', fill: '#475569' }).setOrigin(0.5).setDepth(10);
+                
+                this.createTitle();
+
+                this.physics.add.collider(this.player, this.needles, () => this.handleDamage(), null, this);
+                this.physics.add.collider(this.player, this.danmakuGroup, () => this.handleDamage(), null, this); // 弾幕との衝突判定
+                this.physics.add.overlap(this.player, this.scoreZones, this.increaseScore, null, this);
+                this.physics.add.overlap(this.player, this.powerups, this.handlePowerupCollision, null, this);
+                
+                this.setupInput();
+            }
+            
+            createTitle() {
+                this.titleContainer = this.add.container(0, this.game.config.height * 0.35);
+                this.titleContainer.setDepth(10);
+
+                let xOffsetTitle = 0;
+                const titleCharStyle = { fontSize: '48px', fill: '#1e293b', fontStyle: 'bold' };
+                const titleChars = ['Z', 'E', 'N', '力'];
+
+                titleChars.forEach(char => {
+                    const text = this.add.text(xOffsetTitle, 0, char, titleCharStyle).setOrigin(0, 0.5);
+                    this.titleContainer.add(text);
+                    xOffsetTitle += text.width + 5;
+                });
+
+                const instructionText = this.controlMode === 'touch' ? 'でタップしろ！！' : 'でSpaceを連打！！';
+                const remainingTextStyle = { fontSize: '32px', fill: '#475569', fontStyle: 'bold' };
+                const remainingText = this.add.text(xOffsetTitle, 5, instructionText, remainingTextStyle).setOrigin(0, 0.5);
+                this.titleContainer.add(remainingText);
+
+                const totalWidth = this.titleContainer.getBounds().width;
+                this.titleContainer.x = (this.game.config.width - totalWidth) / 2;
+            }
+            
+            setupInput() {
+                if (this.controlMode === 'touch') {
+                    this.input.on('pointerdown', this.handleInput, this);
+                } else {
+                    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+                }
+            }
+
+            handleInput() {
+                if (!this.isGameStarted) {
+                    this.startGame();
+                } else if (!this.isGameOver) {
+                    this.jump();
+                } else {
+                    this.restartGame();
+                }
+            }
+
+            startGame() {
+                this.isGameStarted = true;
+                this.player.body.setAllowGravity(true);
+                if (this.titleContainer) this.titleContainer.destroy();
+
+                this.needleTimer = this.time.addEvent({ delay: this.spawnRate, callback: this.spawnNeedlePair, callbackScope: this, loop: true });
+                this.powerupTimer = this.time.addEvent({ delay: 2800, callback: this.spawnPowerup, callbackScope: this, loop: true }); // 出現間隔を短縮
+                this.danmakuTimer = this.time.addEvent({ delay: 2100, callback: this.spawnDanmaku, callbackScope: this, loop: true }); // 弾幕タイマーを開始
+                
+                this.jump();
+            }
+
+            jump() {
+                this.player.body.setVelocityY(this.jumpVelocity);
+                this.tweens.add({ targets: this.player, angle: -20, duration: 100, ease: 'Power1' });
+            }
+
+            spawnNeedlePair() {
+                if(this.isGameOver) return;
+                
+                const gapY = Phaser.Math.Between(this.needleGap, this.game.config.height - this.needleGap);
+                
+                const upperNeedle = this.needles.create(this.game.config.width, gapY - this.needleGap / 2, 'needle').setOrigin(0, 1);
+                const lowerNeedle = this.needles.create(this.game.config.width, gapY + this.needleGap / 2, 'needle').setOrigin(0, 0);
+                
+                [upperNeedle, lowerNeedle].forEach(n => { 
+                    n.body.setAllowGravity(false).setVelocityX(this.needleSpeed).setImmovable(true);
+                });
+                
+                const scoreZone = this.scoreZones.create(this.game.config.width + 40, gapY, null);
+                scoreZone.body.setSize(10, this.needleGap).setAllowGravity(false).setVelocityX(this.needleSpeed);
+            }
+
+            spawnPowerup() {
+                if (this.isGameOver || this.health === 4) return;
+                const powerupChars = ['Z', 'E', 'N'];
+                const char = Phaser.Math.RND.pick(powerupChars);
+                const y = Phaser.Math.Between(100, this.game.config.height - 100);
+
+                const powerupText = this.add.text(this.game.config.width, y, char, { fontSize: '48px', fill: '#2563eb', fontStyle: 'bold', stroke: '#fff', strokeThickness: 4 });
+                this.powerups.add(powerupText);
+                
+                this.physics.world.enable(powerupText);
+                powerupText.body.setAllowGravity(false).setVelocityX(this.needleSpeed * 0.9);
+            }
+
+            spawnDanmaku() {
+                if (this.isGameOver) return;
+
+                const word = Phaser.Math.RND.pick(this.danmakuWords);
+                const y = Phaser.Math.Between(50, this.game.config.height - 50);
+
+                const danmakuText = this.add.text(this.game.config.width, y, word, {
+                    fontSize: '24px',
+                    color: '#ef4444', // 赤色
+                    fontStyle: 'bold',
+                    stroke: '#ffffff',
+                    strokeThickness: 3
+                });
+                
+                this.danmakuGroup.add(danmakuText);
+                this.physics.world.enable(danmakuText);
+                danmakuText.body.setAllowGravity(false).setVelocityX(this.needleSpeed * 1.1).setImmovable(true);
+            }
+
+            handleDamage() {
+                if (this.isGameOver || this.isInvincible) return;
+
+                this.health--;
+                this.updatePlayerVisuals();
+                this.cameras.main.shake(150, 0.005);
+
+                if (this.health <= 0) {
+                    this.endGame();
+                    return;
+                }
+
+                this.isInvincible = true;
+                this.tweens.add({
+                    targets: this.player, alpha: 0.5, duration: 150, yoyo: true, repeat: 3,
+                    onComplete: () => { this.player.setAlpha(1); this.isInvincible = false; }
+                });
+            }
+            
+            handlePowerupCollision(player, powerup) {
+                const collectedChar = powerup.text;
+                powerup.destroy();
+                if (this.isGameOver) return;
+
+                const requiredChar = this.playerChars[this.health];
+
+                if (this.health < 4 && collectedChar === requiredChar) {
+                    this.health++;
+                    this.updatePlayerVisuals();
+                    this.tweens.add({
+                        targets: this.playerCharObjects[this.health - 1],
+                        scale: 1.5, alpha: 0.5, yoyo: true, duration: 200,
+                        onStart: () => { this.playerCharObjects[this.health - 1].setTint(0x10b981); },
+                        onComplete: () => { this.playerCharObjects[this.health - 1].clearTint().setScale(1).setAlpha(1); }
+                    });
+                } else {
+                    this.handleDamage();
+                }
+            }
+
+            updatePlayerVisuals() {
+                let currentWidth = 0;
+                this.playerCharObjects.forEach((charObj, index) => {
+                    const isVisible = index < this.health;
+                    charObj.setVisible(isVisible);
+                    if (isVisible) {
+                        currentWidth += charObj.width + 5;
+                    }
+                });
+                this.player.body.setSize(currentWidth > 0 ? currentWidth : 20, 40);
+                this.player.body.setOffset(-this.player.width * this.player.originX, -this.player.height * this.player.originY);
+            }
+
+            increaseScore(player, zone) {
+                this.score++;
+                this.scoreText.setText(`Score: ${this.score}`);
+                zone.destroy();
+
+                const gapReductionPerPoint = 8;
+                const newGap = this.initialNeedleGap - (this.score * gapReductionPerPoint);
+                this.needleGap = Math.max(this.minNeedleGap, newGap);
+            }
+
+            endGame() {
+                if (this.isGameOver) return;
+                this.isGameOver = true;
+                this.physics.pause();
+                if(this.needleTimer) this.needleTimer.remove();
+                if(this.powerupTimer) this.powerupTimer.remove();
+                if(this.danmakuTimer) this.danmakuTimer.remove(); // 弾幕タイマーを停止
+                
+                this.player.setVisible(false);
+
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('itoToshiHighScore_zen', this.highScore);
+                    this.highScoreText.setText(`New High Score: ${this.highScore}`);
+                }
+                
+                const restartText = this.controlMode === 'touch' ? 'タップしてリスタート' : 'スペースキーでリスタート';
+                this.gameOverText = this.add.text(this.game.config.width / 2, this.game.config.height / 2, `ゲームオーバー\n${restartText}`, { fontSize: '36px', fill: '#b91c1c', align: 'center', fontStyle: 'bold', backgroundColor: 'rgba(255,255,255,0.7)', padding: { x: 20, y: 10 } }).setOrigin(0.5).setDepth(20);
+            }
+            
+            restartGame() {
+                this.scene.restart({ controlMode: this.controlMode });
+            }
+
+            update() {
+                if (this.controlMode === 'keyboard' && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+                    this.handleInput();
+                }
+
+                if (!this.isGameStarted || this.isGameOver) {
+                    return;
+                };
+                
+                if (this.player.angle < 90) {
+                    this.player.angle += 1;
+                }
+
+                Phaser.Actions.Call(this.needles.getChildren(), child => { if (child.x < -child.width) child.destroy(); });
+                Phaser.Actions.Call(this.scoreZones.getChildren(), child => { if (child.x < -child.width) child.destroy(); });
+                Phaser.Actions.Call(this.powerups.getChildren(), child => { if (child.x < -child.width) child.destroy(); });
+                Phaser.Actions.Call(this.danmakuGroup.getChildren(), child => { if (child.x < -child.width) child.destroy(); }); // 弾幕のクリーンアップ
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: 480,
+                height: 640
+            },
+            width: 480,
+            height: 640,
+            parent: 'game-container',
+            physics: {
+                default: 'arcade',
+                arcade: { debug: false }
+            },
+            scene: [ModeSelectScene, IntroScene, GameScene]
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>
