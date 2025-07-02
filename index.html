@@ -14,7 +14,7 @@
             height: 100%;
             overflow: hidden; /* スクロールバーを非表示に */
         }
-      .game-container {
+       .game-container {
             width: 100%;
             height: 100%;
             display: flex;
@@ -116,7 +116,7 @@
                     icon.fillStyle(0x333333, 1);
                     for (let i = 0; i < 3; i++) {
                         for (let j = 0; j < 7; j++) {
-                             icon.fillRect(-40 + j * 12, -18 + i * 12, 8, 8);
+                               icon.fillRect(-40 + j * 12, -18 + i * 12, 8, 8);
                         }
                     }
                     return icon;
@@ -200,12 +200,17 @@
                     this.startTransition();
                 });
 
+                // --- 修正箇所 ---
+                // 以下の入力イベントリスナーを削除（またはコメントアウト）することで、
+                // 動画再生中のクリックによるスキップを無効化します。
+                /*
                 this.input.once('pointerdown', () => {
                     if (vid.isPlaying()) {
                         vid.stop();
                     }
                     this.startTransition();
                 });
+                */
             }
             
             startTransition() {
@@ -270,8 +275,8 @@
                 this.powerups = null;
                 this.danmakuGroup = null; 
                 this.danmakuWords = [
-                    '助けて', 'あなたを待ってる', '迎えはいつ？', 'どこにいるの？', 'ここは白くて怖い', '聞こえる？', '綺麗な音でしょ', '懐かしいわ', 'きっと全て夢ね', 'うるさい', '白い部屋は怖い？',
-                    'まだ見えない', '歌が聞こえる', '愛おしいわ', 'ぜんまいを探して', '懐かしい音ね', '私を見つけて', '鎖で繋ぎましょ', '真っ赤に咲いたね'
+                    '助けて', 'あなたを待ってる', '迎えはいつ？', 'どこにいるの？', 'ここは白くて怖い', '聞こえる？', '綺麗な音でしょ', '懐かしいわ', 'きっと全て夢ね', 'うるさい', '白は怖い？',
+                    'まだ見えないの', '歌が聞こえる', '愛おしいわ', 'ぜんまいを探して', '懐かしい音ね', '私を見つけて', '鎖で繋ぎましょ', '真っ赤に咲いたね'
                 ];
 
                 this.score = 0;
