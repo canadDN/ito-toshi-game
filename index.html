@@ -159,7 +159,6 @@
                 super('IntroScene');
                 this.transitionStarted = false;
                 this.controlMode = 'touch';
-                this.vid = null;
             }
 
             init(data) {
@@ -184,65 +183,51 @@
                 this.input.once('pointerdown', () => {
                     startPrompt.destroy();
                     this.playIntroVideo();
-                }, this);
+                });
             }
 
             playIntroVideo() {
                 const centerX = this.game.config.width / 2;
                 const centerY = this.game.config.height / 2;
 
-                this.vid = this.add.video(centerX, centerY, 'introVid');
-                const scale = Math.max(this.game.config.width / this.vid.width, this.game.config.height / this.vid.height);
-                this.vid.setScale(scale).setScrollFactor(0);
+                const vid = this.add.video(centerX, centerY, 'introVid');
+                const scale = Math.max(this.game.config.width / vid.width, this.game.config.height / vid.height);
+                vid.setScale(scale).setScrollFactor(0);
 
-                this.vid.setMute(false);
-                this.vid.play();
+                vid.setMute(false);
+                vid.play();
 
-                this.vid.on('complete', this.startTransition, this);
-                this.input.once('pointerdown', this.startTransition, this);
+                vid.on('complete', () => {
+                    this.startTransition(vid);
+                });
+
+                this.input.once('pointerdown', () => {
+                    this.startTransition(vid);
+                });
             }
             
-            startTransition() {
+            startTransition(vid) {
                 if (this.transitionStarted) return;
                 this.transitionStarted = true;
 
-                // イベントリスナーをクリーンアップして多重実行を防止
-                this.input.off('pointerdown', this.startTransition, this);
-                if (this.vid) {
-                    this.vid.off('complete', this.startTransition, this);
-                }
-
-                if (!this.vid || !this.vid.isPlaying()) {
-                    this.cameras.main.fadeOut(1, 0, 0, 0, (camera, progress) => {
-                        if (progress === 1) this.showTextSequence();
-                    });
-                    return;
-                }
-
-                // 1. 音声のフェードアウトを開始
+                // 音声のフェードアウト
                 this.tweens.add({
-                    targets: this.vid,
+                    targets: vid,
                     volume: 0,
                     duration: 1000,
-                    ease: 'Linear',
-                    onComplete: () => {
-                        // 2. 音声がゼロになったら、映像のフェードアウトを開始
-                        this.cameras.main.fadeOut(1000, 0, 0, 0);
-                        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-                            // 3. 映像が暗転したら、次のシーケンスへ
-                            this.showTextSequence();
-                        });
-                    }
+                    ease: 'Linear'
+                });
+
+                // 映像のフェードアウト
+                this.cameras.main.fadeOut(1000, 0, 0, 0);
+                this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                    vid.stop();
+                    this.showTextSequence();
                 });
             }
 
             showTextSequence() {
-                // 4. ビデオオブジェクトを安全に破棄
-                if (this.vid) {
-                    this.vid.stop();
-                    this.vid.destroy();
-                    this.vid = null;
-                }
+                this.children.list.forEach(child => child.setVisible(false));
                 
                 const centerX = this.game.config.width / 2;
                 const centerY = this.game.config.height / 2;
